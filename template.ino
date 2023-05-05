@@ -34,14 +34,14 @@ const char index_html[] PROGMEM = R"rawliteral(
             <div class="card">
                 <p class="card-title">Steering</p>
                 <p class="switch">
-                    <input type="range" onchange="updateSliderPWM(this)" id="slider1" min="0" max="180" step="1" value ="0" class="slider">
+                    <input type="range" oninput="updateSliderPWM(this)" onchange="updateSliderPWM(this)" id="slider1" min="0" max="180" step="1" value="0" class="slider">
                 </p>
                 <p class="state">Angle: <span id="sliderValue1"></span></p>
             </div>
             <div class="card">
                 <p class="card-title">Speed</p>
                 <p class="switch">
-                    <input type="range" onchange="updateSliderPWM(this)" id="slider2" min="0" max="180" step="1" value ="0" class="slider">
+                    <input type="range" oninput="updateSliderPWM(this)" onchange="updateSliderPWM(this)" id="slider2" min="0" max="180" step="1" value="0" class="slider">
                 </p>
                 <p class="state">Speed: <span id="sliderValue2"></span></p>
             </div>
