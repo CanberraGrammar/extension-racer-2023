@@ -25,9 +25,6 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html>
-<!-- Complete project details: https://randomnerdtutorials.com/esp8266-nodemcu-web-server-websocket-sliders/ -->
-
 <!DOCTYPE html>
 <html>
 <head>
