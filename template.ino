@@ -7,8 +7,16 @@
 #include <Servo.h> // Add the Servo library
 
 // Replace with your network credentials
-const char* ssid = "ssid";
-const char* password = "password";
+const char* ssid = "CC-Ext";
+const char* password = "CCRasPiNetwork";
+
+// Define variables:
+long duration;
+int distance;
+
+// Define Trigger and Echo pin:
+#define trigPin D2
+#define echoPin D3
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -17,7 +25,10 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML>
+<!DOCTYPE HTML><html>
+<!-- Complete project details: https://randomnerdtutorials.com/esp8266-nodemcu-web-server-websocket-sliders/ -->
+
+<!DOCTYPE html>
 <html>
 <head>
     <title>ESP Car</title>
@@ -41,7 +52,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             <div class="card">
                 <p class="card-title">Speed</p>
                 <p class="switch">
-                    <input type="range" oninput="updateSliderPWM(this)" onchange="updateSliderPWM(this)" id="slider2" min="0" max="180" step="1" value="0" class="slider">
+                    <input type="range" oninput="updateSliderPWM(this)" onchange="updateSliderPWM(this)" id="slider2" min="0" max="180" step="1" value="90" class="slider">
                 </p>
                 <p class="state">Speed: <span id="sliderValue2"></span></p>
             </div>
@@ -104,7 +115,8 @@ function onMessage(event) {
 )rawliteral";
 
 // Create Servo objects
-
+Servo steering;
+Servo ESC;
 
 String message = "";
 String sliderValue1 = "0";
@@ -159,7 +171,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     if (message.indexOf("1s") >= 0) {
       sliderValue1 = message.substring(2);
       dutyCycle1 = map(sliderValue1.toInt(), 0, 180, 0, 180); // modify the map function to match the servo range (0-180)
-      //Do something
+      steering.attach(5);
+      steering.write(dutyCycle1); // use the Servo.write function instead of analogWrite
       Serial.println(dutyCycle1);
       Serial.print(getSliderValues());
       notifyClients(getSliderValues());
@@ -167,7 +180,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     if (message.indexOf("2s") >= 0) {
       sliderValue2 = message.substring(2);
       dutyCycle2 = map(sliderValue2.toInt(), 0, 180, 0, 180);
-      //Do something
+      ESC.attach(16 ,1000,2000);
+      ESC.write(dutyCycle2);
       Serial.println(dutyCycle2);
       Serial.print(getSliderValues());
       notifyClients(getSliderValues());
@@ -201,16 +215,25 @@ void initWebSocket() {
 }
 
 void setup() {
+  // Define inputs and outputs:
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  //Begin Serial communication at a bitrate of 9600:
   Serial.begin(9600);
 
   // Set servo pins
   const int servoPin1 = 5;
   const int servoPin2 = 16;
-
+  
   // Set servo object
-
+  Servo steering;
+  Servo ESC;
+  
   // Attach servos to pins
-
+  steering.attach(servoPin1);
+  ESC.attach(servoPin2 ,1000,2000); // (pin, min pulse width, max pulse width in microseconds)
+  
   initFS();
   initWiFi();
   initWebSocket();
@@ -219,7 +242,7 @@ void setup() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/html", index_html);
   });
-
+  
   server.serveStatic("/", LittleFS, "/");
 
   // Start server
@@ -229,8 +252,34 @@ void setup() {
 
 void loop() {
   // Set servo angles based on duty cycle values
-  
-  //Do something
+
+
+  // Clear the trigPin by setting it LOW:
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(5);
+
+  // Trigger the sensor by setting the trigPin high for 10 microseconds:
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Read the echoPin, pulseIn() returns the duration (length of the pulse) in microseconds:
+  duration = pulseIn(echoPin, HIGH);
+  // Calculate the distance:
+  distance = duration * 0.034 / 2;
+
+  // Print the distance on the Serial Monitor (Ctrl+Shift+M):
+  Serial.print("Distance = ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  if (distance < 30) {
+    ESC.write(0);
+    return;
+  }
+
+  steering.write(dutyCycle1);
+  ESC.write(dutyCycle2);
 
   // Cleanup WebSocket clients
   ws.cleanupClients();
