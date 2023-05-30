@@ -14,10 +14,6 @@ The project utilises a NodeMCU board and an async web server to control a remote
 - Change network settings to your local network
 - Wire up your Board to your car chasis, and launch web server
 
-## ⚡ Wiring Diagram
-
-![Wiring Diagram](wiringDiagram.png)
-
 ## 🧱 Dependencies and Libraries
 - Arduino
 - NodeMCU ESP8266
